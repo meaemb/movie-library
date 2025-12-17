@@ -43,7 +43,7 @@ movie-library/
 
 1. Clone the repository:
 
-git clone https://github.com/USERNAME/movie-library.git
+git clone https://github.com/meaemb/movie-library.git
 
 2. Navigate to the project folder:
 
