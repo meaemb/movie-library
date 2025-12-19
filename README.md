@@ -6,9 +6,14 @@ It demonstrates basic server setup, static file handling, and a well-organized p
 Perfect as a starting point for adding movie data, multiple pages, or API functionality.
 
 ## Team Members
-- Begina M. SE-2427: Project initialization, Express server setup
-- Dilyara A. SE-2427 : Main HTML page development (`views/index.html`)
-- Kamila A. SE-2427: Public folder organization, project documentation
+- **Begina M. (SE-2427)**  
+  Express server setup, main GET routes (`/`, `/about`), project structure.
+
+- **Dilyara A. (SE-2427)**  
+  Contact page implementation, HTML form, POST `/contact` route handling.
+
+- **Kamila A. (SE-2427)**  
+  Custom 404 error page, error-handling middleware, navigation consistency across pages.
 
 ## Project Purpose
 - Set up a working Express server
@@ -26,8 +31,11 @@ Perfect as a starting point for adding movie data, multiple pages, or API functi
 movie-library/                          
 ├── public/                  
 │   └── styles.css               
-├── views/                        
-│   └── index.html                  
+├── views/
+│   ├── index.html
+│   ├── about.html
+│   ├── contact.html
+│   └── 404.html                 
 ├── server.js                   
 ├── package.json                  
 └── README.md    
@@ -37,6 +45,23 @@ movie-library/
 - Serving static files such as CSS from the 'public' folder
 - A main landing page (index.html) with project description
 - Organized folder structure for scalability
+
+## Application Routes
+
+- `/` — Home page  
+- `/about` — About page  
+- `/contact` — Contact page (GET + POST)  
+- Any other route — Custom 404 page
+
+## Contact Form Handling
+
+The contact page includes an HTML form that sends data using a POST request.
+Form data is processed on the server using Express middleware and `req.body`.
+
+## Error Handling
+
+The application includes a custom 404 error page.
+If a user navigates to a non-existing route, the server responds with a 404 page.
 
 
 ## Installation & Run Instructions
