@@ -7,38 +7,28 @@
 </head>
 <body>
 
-  <nav>
-    <a href="/">Home</a>
-    <a href="/about">About</a>
-    <a href="/contact">Contact</a>
-  </nav>
+<nav>
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+  <a href="/contact">Contact</a>
+</nav>
 
+<div class="container">
   <h1>Contact Us</h1>
 
-  <form action="/contact" method="POST">
-    <label>
-      Name:
-      <input type="text" name="name" required>
-    </label>
+  <form method="POST" action="/contact">
+    <label>Name</label>
+    <input type="text" name="name">
 
-    <br><br>
+    <label>Email</label>
+    <input type="email" name="email">
 
-    <label>
-      Email:
-      <input type="email" name="email" required>
-    </label>
-
-    <br><br>
-
-    <label>
-      Message:
-      <textarea name="message" required></textarea>
-    </label>
-
-    <br><br>
+    <label>Message</label>
+    <textarea name="message"></textarea>
 
     <button type="submit">Send</button>
   </form>
+</div>
 
 </body>
 </html>

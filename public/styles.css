@@ -1,21 +1,138 @@
+/* ===== Reset ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== Body ===== */
 body {
-    font-family: Arial, sans-serif;
-    max-width: 700px;
-    margin: 50px auto;
-    padding: 20px;
-    line-height: 1.6;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #ffffff;
+  min-height: 100vh;
+  color: #333;
 }
 
-h1 {
-    text-align: center;
-    color: #333;
+/* ===== Navigation (FULL WIDTH) ===== */
+nav {
+  background: #313395;
+  padding: 16px 40px;
+  display: flex;
+  gap: 30px;
 }
 
-h2 {
-    margin-top: 30px;
-    color: #333;
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
-ul {
-    padding-left: 20px;
+nav a:hover {
+  opacity: 0.7;
+}
+
+/* ===== Container ===== */
+.container {
+  max-width: 900px;
+  margin: 60px auto;
+  background: #313395;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.6s ease;
+}
+
+/* ===== Headings ===== */
+h1, h2 {
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+p {
+  margin-bottom: 15px;
+  color: #ffffff;
+  line-height: 1.6;
+}
+a{
+  color:#ffffff;
+}
+
+/* ===== Forms ===== */
+form {
+  margin-top: 25px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color:#fff
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* ===== Button ===== */
+button {
+  background: #ffffff;
+  color: rgb(39, 73, 149);
+  border: none;
+  padding: 14px 28px;
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* ===== Error Message ===== */
+.error-message {
+  background: #ffe5e5;
+  color: #b00020;
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ===== 404 ===== */
+.error {
+  text-align: center;
+}
+
+.error h1 {
+  font-size: 72px;
+  margin-bottom: 10px;
+}
+
+.error p {
+  font-size: 18px;
+}
+
+/* ===== Animation ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
