@@ -1,105 +1,68 @@
 # Movie Library — Web Application
 
 Movie Library is a Node.js & Express.js web application that serves as a prototype
-for a movie catalog website.  
-The project is developed in two stages as part of **Assignment 2**.
+for a movie catalog website.
+The project is developed incrementally as part of university backend assignments.
 
-- **Part 1** focuses on routing, middleware, validation, and basic API setup  
-- **Part 2** extends the project with database integration and full CRUD API
+- **Assignment 2** - Express basics and CRUD with SQLite
+- **Assignment 3 Part 1** - Backend API with MongoDB (CRUD, filtering, sorting, projection)
 
+# Assignment 3 — Part 1: Backend API with MongoDB
 
-# Assignment 2 — Part 1: Express Basics
+## Project Description 
 
-## Project Description (Part 1)
+In Assignment 3 Part 1, the project was extended by replacing the relational
+SQLite database with MongoDB and implementing a RESTful backend API using
+the native MongoDB Node.js driver.
 
-In Assignment 2 Part 1, the goal was to build a basic Express.js application with
-server-side routing, middleware usage, form handling, validation, and a simple
-JSON API endpoint.
+The application now supports full CRUD operations, query filtering, sorting,
+field projection, proper validation, and HTTP status codes.
+
+This part focuses entirely on backend API design and database integration
+and serves as a foundation for Assignment 3 Part 2.
 
 
 ## Team Members (Part 1)
 
+- **Kamila A.  (SE-2427)**  
+  CRUD API routes implementation, request validation, filtering, sorting,
+projection, and HTTP status codes.
+
 - **Begina M. (SE-2427)**  
-  Express server setup, project structure, main GET routes (`/`, `/about`),
-  request logging middleware.
+  MongoDB database design, native MongoDB driver connection,
+collection initialization, ObjectId handling.
 
 - **Dilyara A. (SE-2427)**  
-  Contact page implementation, HTML form handling, POST `/contact` route,
-  query parameters and dynamic routes.
-
-- **Kamila A. (SE-2427)**  
-  Server-side validation, saving form data to a JSON file, custom 404 error page,
-  error-handling middleware.
+  Express server setup, middleware, static files, page routing,
+contact form handling, and global 404 error handling.
 
 
-## Features Implemented (Part 1)
+## Technologies Used (Assignment 3 — Part 1)
 
-- Express server running on port 3000
-- Static file serving using Express
-- Custom request logging middleware
-- Form data parsing using `express.urlencoded`
-- Server-side form validation
-- Query parameters and dynamic routing
-- JSON API endpoint
-- Custom 404 error page
-
-
-## Application Routes (Part 1)
-
-- `/` — Home page  
-- `/about` — About page  
-- `/contact` — Contact page (GET + POST with validation)  
-- `/search?q=value` — Search using query parameters  
-- `/item/:id` — Dynamic route with URL parameter  
-- `/api/info` — JSON API endpoint  
-- Any other route — Custom 404 error page  
-
-
-# Assignment 2 — Part 2: Database Integration & CRUD API
-
-## Project Description (Part 2)
-
-In Assignment 2 Part 2, the project was extended by integrating a database and
-implementing a RESTful CRUD API.  
-Real data storage is used instead of placeholders.
-
-## Team Members (Assignment 2 — Part 2)
-
-- **Kamila A. (SE-2427)**
-SQLite database integration, table creation, server middleware setup.
-
-- **Begina M. (SE-2427)**
-RESTful CRUD API implementation, SQL queries, JSON responses.
-
-- **Dilyara A. (SE-2427)**
-Validation and HTTP status codes, 404 handling, Home page API links
-
-## Technologies Used (Part 2)
-
-- **Node.js**
-- **Express.js**
-- **SQLite**
-- **better-sqlite3**
-- **HTML5**
-- **CSS3**
+- Node.js
+- Express.js
+- MongoDB
+- MongoDB Native Driver
+- HTML5
+- CSS3
 
 
 ## Database Design
 
-**Database:** SQLite  
-**Table:** `movies`
+- Database: MongoDB
+- Database name: movie_library
+- Collection: movies
 
-### Table Structure
-
-| Field        | Type     | Description                  |
-|-------------|----------|------------------------------|
-| id          | INTEGER  | Primary Key (auto-increment) |
-| title       | TEXT     | Movie title (required)       |
-| description | TEXT     | Movie description (required) |
-| year        | INTEGER  | Release year (optional)      |
-
-The database and table are created automatically when the server starts if they
-do not already exist.
+## Movie Document Structure
+{
+  "_id": ObjectId,
+  "title": "String",
+  "description": "String",
+  "year": Number,
+  "createdAt": Date
+}
+The database and collection are created automatically after the first
+successful POST request.
 
 
 ## REST API Routes (CRUD)
@@ -114,6 +77,13 @@ do not already exist.
 
 All API routes return JSON responses with proper HTTP status codes.
 
+## Query Features
+
+- Filtering: /api/movies?year=2014
+
+- Sorting: /api/movies?sort=year
+
+- Projection: /api/movies?fields=title,year
 
 ## Validation & Error Handling (Part 2)
 
@@ -128,7 +98,8 @@ All API routes return JSON responses with proper HTTP status codes.
 
 The Home page includes direct links for quick API testing:
 - `/api/movies`
-- `/api/movies/1`
+- `/api/movies?sort=year`
+- `/api/movies?fields=title,year`
 
 
 ## Project Structure
