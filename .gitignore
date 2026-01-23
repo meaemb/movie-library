@@ -1,3 +1,4 @@
 node_modules/
 movies.db
 contact-data.json
+.env

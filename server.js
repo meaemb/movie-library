@@ -1,15 +1,22 @@
 /*
-   ASSIGNMENT 3 — PART 1
-   Backend API with MongoDB (CRUD)
+   ASSIGNMENT 3 — PART 2
+   Backend API with MongoDB (CRUD + ENV + Deployment Ready)
 */
 
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
+require('dotenv').config();
 
 const app = express();
-const PORT = 3000;
+
+/* =====================
+   ENV CONFIG
+===================== */
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017';
+const DB_NAME = 'movie_library';
 
 /* =====================
    MIDDLEWARE
@@ -55,7 +62,7 @@ app.post('/contact', (req, res) => {
     createdAt: new Date().toISOString()
   };
 
-  fs.writeFile('contact-data.json', JSON.stringify(data, null, 2), (err) => {
+  fs.writeFile('contact-data.json', JSON.stringify(data, null, 2), err => {
     if (err) {
       return res.status(500).send('Failed to save data');
     }
@@ -71,12 +78,9 @@ app.post('/contact', (req, res) => {
 /* =====================
    MONGODB CONNECTION
 ===================== */
-const MONGO_URL = 'mongodb://127.0.0.1:27017';
-const DB_NAME = 'movie_library';
-
 let moviesCollection;
 
-MongoClient.connect(MONGO_URL)
+MongoClient.connect(MONGO_URI)
   .then(client => {
     const db = client.db(DB_NAME);
     moviesCollection = db.collection('movies');
@@ -198,7 +202,9 @@ app.delete('/api/movies/:id', async (req, res) => {
   }
 
   try {
-    const result = await moviesCollection.deleteOne({ _id: new ObjectId(id) });
+    const result = await moviesCollection.deleteOne({
+      _id: new ObjectId(id)
+    });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: 'Movie not found' });
@@ -225,5 +231,5 @@ app.use((req, res) => {
    SERVER
 ===================== */
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

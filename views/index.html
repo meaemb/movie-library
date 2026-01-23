@@ -16,23 +16,60 @@
 <div class="container">
   <h1>Movie Library</h1>
   <p>
-    Welcome to our Movie Library prototype. This project demonstrates
-    a simple Express.js web application with routing and form handling.
+    Welcome to our Movie Library prototype.
+    All CRUD operations are performed directly on this page.
   </p>
 
-  <h2>Navigation</h2>
-  <p>
-    Use the menu above to visit the About and Contact pages.
-  </p>
+  <!-- ADD MOVIE FORM -->
+  <h2>Add Movie</h2>
+  <form id="addForm">
+    <label>Title</label>
+    <input type="text" id="title" required>
 
-  <h2>API Links</h2>
-  <ul>
-    <li><a href="/api/movies">All movies</a></li>
-    <li><a href="/api/movies?sort=year">Movies sorted by year</a></li>
-    <li><a href="/api/movies?fields=title,year">Only title and year</a></li>
-  </ul>
+    <label>Description</label>
+    <textarea id="description" required></textarea>
 
+    <label>Year</label>
+    <input type="number" id="year">
+
+    <button type="submit">Add Movie</button>
+  </form>
+
+  <hr style="margin:40px 0; opacity:0.3">
+
+  <!-- FILTER & SORT -->
+  <h2>Filter & Sort</h2>
+  <form id="filterForm">
+    <label>Filter by year</label>
+    <input type="number" id="filterYear" placeholder="e.g. 2023">
+
+    <label>Sort by</label>
+    <select id="sortField">
+      <option value="">None</option>
+      <option value="year">Year</option>
+    </select>
+
+    <button type="submit">Apply</button>
+  </form>
+
+  <br>
+
+  <!-- MOVIE TABLE -->
+  <h2>Movie List</h2>
+
+  <table class="movie-table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Year</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="moviesTable"></tbody>
+  </table>
 </div>
 
+<script src="/movies.js"></script>
 </body>
 </html>
