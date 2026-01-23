@@ -6,45 +6,44 @@ The project is developed incrementally as part of university backend assignments
 
 - **Assignment 2** - Express basics and CRUD with SQLite
 - **Assignment 3 Part 1** - Backend API with MongoDB (CRUD, filtering, sorting, projection)
-
-# Assignment 3 — Part 1: Backend API with MongoDB
-
-## Project Description 
-
-In Assignment 3 Part 1, the project was extended by replacing the relational
-SQLite database with MongoDB and implementing a RESTful backend API using
-the native MongoDB Node.js driver.
-
-The application now supports full CRUD operations, query filtering, sorting,
-field projection, proper validation, and HTTP status codes.
-
-This part focuses entirely on backend API design and database integration
-and serves as a foundation for Assignment 3 Part 2.
+- **Assignment 3 Part 2** — MongoDB Atlas, environment variables, deployment  
 
 
-## Team Members (Part 1)
+# Assignment 3 — Part 2: Backend API with MongoDB & Deployment
 
-- **Kamila A.  (SE-2427)**  
-  CRUD API routes implementation, request validation, filtering, sorting,
-projection, and HTTP status codes.
+## Project Description
+
+In Assignment 3 Part 2, the project was extended to become fully deployment-ready.
+The backend application now uses **MongoDB Atlas** as a cloud database,
+**environment variables** for configuration, and is **deployed online** using a hosting platform.
+
+All CRUD operations are performed through the website interface, without using
+Postman or Thunder Client.
+
+The application demonstrates a complete backend workflow:
+database connection, CRUD operations, environment configuration, and deployment.
+
+## Team Members (Assignment 3 — Part 2)
+
+- **Kamila A. (SE-2427)**  
+  MongoDB Atlas setup, database connection.
 
 - **Begina M. (SE-2427)**  
-  MongoDB database design, native MongoDB driver connection,
-collection initialization, ObjectId handling.
+  Deployment to Render, environment variables configuration.
 
 - **Dilyara A. (SE-2427)**  
-  Express server setup, middleware, static files, page routing,
-contact form handling, and global 404 error handling.
+  GitHub repository management.
 
 
 ## Technologies Used (Assignment 3 — Part 1)
 
-- Node.js
-- Express.js
-- MongoDB
-- MongoDB Native Driver
-- HTML5
-- CSS3
+- **Node.js**
+- **Express.js**
+- **MongoDB Atlas**
+- **MongoDB Native Driver**
+- **dotenv**
+- **HTML5**
+- **CSS3**
 
 
 ## Database Design
@@ -105,15 +104,16 @@ The Home page includes direct links for quick API testing:
 ## Project Structure
 movie-library/
 ├── public/
-│ └── styles.css
+│   └── styles.css
+│   └── movies.js
 ├── views/
-│ ├── index.html
-│ ├── about.html
-│ ├── contact.html
-│ └── 404.html
-├── movies.db
+│   ├── index.html
+│   ├── about.html
+│   ├── contact.html
+│   └── 404.html
 ├── server.js
 ├── package.json
+├── package-lock.json
 └── README.md
 
 
