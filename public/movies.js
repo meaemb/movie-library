@@ -1,61 +1,52 @@
-// LOAD ALL MOVIES (GET)
+const grid = document.getElementById('moviesGrid');
+
+// LOAD MOVIES
 async function loadMovies(query = '') {
   const res = await fetch('/api/movies' + query);
   const movies = await res.json();
-
-  const table = document.getElementById('moviesTable');
-  table.innerHTML = '';
+  grid.innerHTML = '';
 
   movies.forEach(movie => {
-    table.innerHTML += `
-      <tr>
-        <td>${movie.title}</td>
-        <td>${movie.description}</td>
-        <td>${movie.year ?? ''}</td>
-        <td>
-          <div class="actions">
-            <button onclick="editMovie('${movie._id}')">Edit</button>
-            <button onclick="deleteMovie('${movie._id}')">Delete</button>
-          </div>
-        </td>
-      </tr>
+    grid.innerHTML += `
+      <div class="movie-card">
+        <h3>${movie.title}</h3>
+        <span class="year">${movie.year ?? ''}</span>
+        <p>${movie.description}</p>
+        <div class="actions">
+          <button onclick="editMovie('${movie._id}')">Edit</button>
+          <button onclick="deleteMovie('${movie._id}')">Delete</button>
+        </div>
+      </div>
     `;
   });
 }
 
-
-// ADD MOVIE (POST)
+// ADD MOVIE
 document.getElementById('addForm').addEventListener('submit', async e => {
   e.preventDefault();
-
-  const title = document.getElementById('title').value;
-  const description = document.getElementById('description').value;
-  const year = document.getElementById('year').value;
 
   await fetch('/api/movies', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, description, year })
+    body: JSON.stringify({
+      title: title.value,
+      description: description.value,
+      year: year.value
+    })
   });
 
   e.target.reset();
   loadMovies();
 });
 
-
-// DELETE MOVIE (DELETE)
+// DELETE
 async function deleteMovie(id) {
   if (!confirm('Delete this movie?')) return;
-
-  await fetch('/api/movies/' + id, {
-    method: 'DELETE'
-  });
-
+  await fetch('/api/movies/' + id, { method: 'DELETE' });
   loadMovies();
 }
 
-
-// UPDATE MOVIE (PUT)
+// UPDATE
 async function editMovie(id) {
   const title = prompt('New title');
   const description = prompt('New description');
@@ -72,22 +63,10 @@ async function editMovie(id) {
   loadMovies();
 }
 
-
-// FILTER & SORT
-document.getElementById('filterForm').addEventListener('submit', e => {
-  e.preventDefault();
-
+// FILTER
+document.getElementById('filterBtn').addEventListener('click', () => {
   const year = document.getElementById('filterYear').value;
-  const sort = document.getElementById('sortField').value;
-
-  let query = '?';
-
-  if (year) query += `year=${year}&`;
-  if (sort) query += `sort=${sort}`;
-
-  loadMovies(query);
+  loadMovies(year ? `?year=${year}` : '');
 });
 
-
-// INITIAL LOAD
 loadMovies();
