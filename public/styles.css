@@ -266,6 +266,18 @@ body {
   text-align: left;
 }
 
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 500px;
+}
+
+.contact-form textarea {
+  resize: vertical;
+  min-height: 140px;
+  max-height: 260px;
+}
 
 /* REAL ABOUT PAGE */
 .about-real {
