@@ -9,7 +9,7 @@ const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const MongoStore = require('connect-mongo')(session);
 const bcrypt = require('bcrypt');
 
 require('dotenv').config();
@@ -47,7 +47,7 @@ app.use(
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: MongoStore({
+    store: new MongoStore({
       mongoUrl: MONGO_URI,
       dbName: DB_NAME,
       collectionName: 'sessions',
@@ -61,6 +61,7 @@ app.use(
     },
   })
 );
+
 
 /* =====================
    DATABASE
