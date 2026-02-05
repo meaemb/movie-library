@@ -9,9 +9,7 @@ const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const session = require('express-session');
-const MongoStore = require('connect-mongo')(session);
 const bcrypt = require('bcrypt');
-
 require('dotenv').config();
 
 const app = express();
@@ -38,6 +36,7 @@ app.use((req, res, next) => {
 
 /* =====================
    SESSION CONFIG
+   (БЕЗ connect-mongo)
 ===================== */
 app.set('trust proxy', 1);
 
@@ -47,21 +46,14 @@ app.use(
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: new MongoStore({
-      mongoUrl: MONGO_URI,
-      dbName: DB_NAME,
-      collectionName: 'sessions',
-      ttl: 60 * 60 * 24 * 7,
-    }),
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 7,
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
 );
-
 
 /* =====================
    DATABASE
@@ -194,7 +186,6 @@ app.get('/api/movies', async (req, res) => {
   try {
     const { year } = req.query;
     const filter = {};
-
     if (year) filter.year = Number(year);
 
     const movies = await moviesCollection.find(filter).toArray();
