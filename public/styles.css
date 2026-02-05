@@ -389,3 +389,24 @@ body {
   line-height: 1.7;
   color: #ddd;
 }
+
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.contact-form textarea {
+  resize: vertical;  
+  min-height: 120px;
+  max-height: 260px;
+}
+.content-box {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px;
+  border-radius: 20px;
+}
