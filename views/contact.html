@@ -8,36 +8,37 @@
 <body>
 
 <nav class="navbar">
-  <div class="logo">MovieLibrary</div>
-
-  <div class="nav-links">
-    <a href="/">Home</a>
-    <a href="/about">About</a>
-    <a href="/contact">Contact</a>
+  <div class="nav-left">
+    <div class="logo">MovieLibrary</div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </div>
   </div>
 
-  <div class="auth-links" id="authLinks">
-    <a href="/login">Login</a>
-  </div>
+  <div class="nav-right" id="authLinks"></div>
 </nav>
 
+
 <main class="page">
-  <div class="content-box glass">
+  <div class="layout">
+    <div class="glass-card">
+      <h1>Contact Us</h1>
+      <p class="muted">
+        Have questions or feedback? Send us a message.
+      </p>
 
-    <h1>Contact Us</h1>
-    <p class="muted">
-      Have questions, feedback, or suggestions? We’d love to hear from you.
-    </p>
-
-    <form method="POST" action="/contact" class="contact-form">
-      <input type="text" name="name" placeholder="Your name" required>
-      <input type="email" name="email" placeholder="Your email" required>
-      <textarea name="message" placeholder="Your message" required></textarea>
-      <button type="submit" class="primary-btn">Send message</button>
-    </form>
-
+      <form method="POST" action="/contact" class="contact-form">
+        <input name="name" placeholder="Your name" required>
+        <input name="email" type="email" placeholder="Your email" required>
+        <textarea name="message" placeholder="Your message" required></textarea>
+        <button class="primary-btn">Send message</button>
+      </form>
+    </div>
   </div>
 </main>
+
 
 </body>
 </html>
