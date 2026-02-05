@@ -55,12 +55,24 @@ async function loadMovies(query = '') {
       : `<span class="muted">Login required</span>`;
 
     grid.innerHTML += `
-      <div class="movie-card">
-        <h3>${m.title}</h3>
-        <div class="year">${m.year ?? ''}</div>
-        <p>${m.description}</p>
-        ${actions}
-      </div>
+    <div class="movie-card">
+    <h3>${m.title}</h3>
+
+    <div class="meta">
+      <span>${m.year ?? ''}</span> • 
+      <span>${m.genre ?? '—'}</span>
+    </div>
+
+    <p class="desc">${m.description}</p>
+
+    <div class="details">
+      <div><strong>Director:</strong> ${m.director ?? '—'}</div>
+      <div><strong>Duration:</strong> ${m.durationMinutes ?? '—'} min</div>
+      <div><strong>Rating:</strong> ⭐ ${m.rating ?? '—'}</div>
+    </div>
+
+    ${actions}
+  </div>
     `;
   });
 }

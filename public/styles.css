@@ -412,3 +412,21 @@ body {
   color: #ddd;
 }
 
+.movie-card .meta {
+  color: #aaa;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.movie-card .desc {
+  margin: 12px 0;
+  line-height: 1.5;
+}
+
+.movie-card .details {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 12px;
+}
+
+
