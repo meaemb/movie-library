@@ -16,22 +16,18 @@ async function checkAuth() {
    UI AUTH STATE
 ===================== */
 function updateUIAuth() {
-  const addSection = document.getElementById('addSection');
   const authLinks = document.getElementById('authLinks');
 
   if (currentUser) {
-    addSection.style.display = 'block';
     authLinks.innerHTML = `
-      <span class="muted">${currentUser.email}</span>
+      <span class="email">${currentUser.email}</span>
       <button onclick="logout()">Logout</button>
     `;
   } else {
-    addSection.style.display = 'none';
-    authLinks.innerHTML = `
-      <a href="/login" class="login-link">Login</a>
-    `;
+    authLinks.innerHTML = `<a href="/login">Login</a>`;
   }
 }
+
 
 async function logout() {
   await fetch('/api/auth/logout', { method: 'POST' });
