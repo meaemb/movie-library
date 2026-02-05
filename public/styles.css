@@ -19,7 +19,8 @@ body {
 .navbar {
   display: flex;
   justify-content: space-between;
-  padding: 20px 50px;
+  align-items: center;
+  padding: 20px 40px;
   background: #000;
 }
 
@@ -29,10 +30,33 @@ body {
   font-size: 22px;
 }
 
+.nav-links {
+  display: flex;
+  gap: 24px;
+}
+
 .nav-links a {
   color: var(--text);
   margin-left: 25px;
   text-decoration: none;
+}
+
+.nav-links a:hover {
+  opacity: 1;
+}
+
+.auth-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-links button {
+  background: none;
+  border: 1px solid #e50914;
+  color: #e50914;
+  padding: 6px 12px;
+  cursor: pointer;
 }
 
 /* PAGE */
