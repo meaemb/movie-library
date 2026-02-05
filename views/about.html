@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>About</title>
+  <title>About — MovieLibrary</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -11,45 +11,68 @@
   <div class="logo">MovieLibrary</div>
   <div class="nav-links">
     <a href="/">Home</a>
-    <a href="/about">About</a>
+    <a href="/about" class="active">About</a>
     <a href="/contact">Contact</a>
   </div>
 </nav>
 
 <main class="page">
-  <div class="content-box">
-    <h1>About This Project</h1>
+  <div class="center-container">
 
-    <p>
-      Movie Library is a full-stack web application developed as part of
-      university backend assignments.
-    </p>
+    <section class="glass-box about-real">
 
-    <p>
-      The project demonstrates how a real movie catalog platform can be built
-      using Node.js, Express.js, and MongoDB, with full CRUD functionality
-      available directly through the website.
-    </p>
+      <h1>About MovieLibrary</h1>
 
-    <p>
-      Users can browse movies, filter them by year, and interact with the
-      catalog through a modern dark-themed interface inspired by popular
-      streaming platforms.
-    </p>
+      <p class="lead">
+        MovieLibrary is a place where movies live beyond streaming platforms.
+        It’s your personal space to collect, organize, and explore films
+        that matter to you.
+      </p>
 
-    <h2>Key Features</h2>
-    <ul style="color:#ccc; margin-left:20px; line-height:1.7">
-      <li>RESTful API with MongoDB</li>
-      <li>Full CRUD operations via web interface</li>
-      <li>Filtering and sorting support</li>
-      <li>Deployment-ready configuration with environment variables</li>
-      <li>Modern dark UI design</li>
-    </ul>
+      <div class="about-block">
+        <h2>What is MovieLibrary?</h2>
+        <p>
+          MovieLibrary is a curated movie collection platform designed for film
+          lovers who want more than just recommendations.
+          Here, you decide what belongs in your library.
+        </p>
+      </div>
 
-    <p style="margin-top:20px">
-      This project serves as a foundation for further extensions such as
-      authentication, admin roles, and user-specific features.
-    </p>
+      <div class="about-block">
+        <h2>What can you do here?</h2>
+        <ul class="about-list">
+          <li>Build your own movie collection</li>
+          <li>Add films you love or want to remember</li>
+          <li>Edit movie details anytime</li>
+          <li>Remove titles that no longer fit your taste</li>
+          <li>Browse your collection in a clean, card-based layout</li>
+        </ul>
+      </div>
+
+      <div class="about-block">
+        <h2>Why MovieLibrary?</h2>
+        <p>
+          Streaming services change.
+          Catalogs disappear.
+          Favorites get removed.
+        </p>
+        <p>
+          MovieLibrary exists to give you control.
+          Your movies. Your collection. Your rules.
+        </p>
+      </div>
+
+      <div class="about-block">
+        <h2>Who is it for?</h2>
+        <p>
+          MovieLibrary is for casual viewers, cinema enthusiasts,
+          and anyone who enjoys keeping track of films they care about —
+          without distractions.
+        </p>
+      </div>
+
+    </section>
+
   </div>
 </main>
 
