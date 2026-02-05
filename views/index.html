@@ -8,7 +8,7 @@
 <body>
 
 <nav class="navbar">
-  <div class="logo">MovieLibrary</div>
+  <div class="logo">🎬 MovieLibrary</div>
   <div class="nav-links">
     <a href="/">Home</a>
     <a href="/about">About</a>
@@ -16,17 +16,29 @@
   </div>
 </nav>
 
+<!-- HERO -->
+<section class="hero">
+  <h1>Discover Movies</h1>
+  <p>Explore, manage and curate your personal movie collection</p>
+</section>
+
 <main class="page">
-  <h1>Browse Movies</h1>
+
+  <!-- STATS -->
+  <section class="stats">
+    <div><span id="movieCount">0</span><small>Movies</small></div>
+    <div><span>MongoDB</span><small>Database</small></div>
+    <div><span>CRUD</span><small>Web UI</small></div>
+  </section>
 
   <!-- ADD MOVIE -->
   <section class="add-section">
     <h2>Add Movie</h2>
     <form id="addForm" class="add-form">
-      <input id="title" type="text" placeholder="Title" required />
-      <input id="year" type="number" placeholder="Year" />
-      <textarea id="description" placeholder="Description" required></textarea>
-      <button type="submit">Add Movie</button>
+      <input id="title" type="text" placeholder="Movie title" required />
+      <input id="year" type="number" placeholder="Release year" />
+      <textarea id="description" placeholder="Short description" required></textarea>
+      <button type="submit">➕ Add Movie</button>
     </form>
   </section>
 
@@ -36,8 +48,9 @@
     <button id="filterBtn">Apply</button>
   </section>
 
-  <!-- MOVIE GRID -->
+  <!-- MOVIES GRID -->
   <section class="movies-grid" id="moviesGrid"></section>
+
 </main>
 
 <script src="/movies.js"></script>

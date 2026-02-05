@@ -7,21 +7,51 @@
 </head>
 <body>
 
-<nav>
-  <a href="/">Home</a>
-  <a href="/about">About</a>
-  <a href="/contact">Contact</a>
+<nav class="navbar">
+  <div class="logo">MovieLibrary</div>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+  </div>
 </nav>
 
-<div class="container">
-  <h1>About This Project</h1>
-  <p>
-    Movie Library is a simple web application built with Node.js and Express.js.
-  </p>
-  <p>
-    It demonstrates routing, middleware, form handling, and basic server-side validation.
-  </p>
-</div>
+<main class="page">
+  <div class="content-box">
+    <h1>About This Project</h1>
+
+    <p>
+      Movie Library is a full-stack web application developed as part of
+      university backend assignments.
+    </p>
+
+    <p>
+      The project demonstrates how a real movie catalog platform can be built
+      using Node.js, Express.js, and MongoDB, with full CRUD functionality
+      available directly through the website.
+    </p>
+
+    <p>
+      Users can browse movies, filter them by year, and interact with the
+      catalog through a modern dark-themed interface inspired by popular
+      streaming platforms.
+    </p>
+
+    <h2>Key Features</h2>
+    <ul style="color:#ccc; margin-left:20px; line-height:1.7">
+      <li>RESTful API with MongoDB</li>
+      <li>Full CRUD operations via web interface</li>
+      <li>Filtering and sorting support</li>
+      <li>Deployment-ready configuration with environment variables</li>
+      <li>Modern dark UI design</li>
+    </ul>
+
+    <p style="margin-top:20px">
+      This project serves as a foundation for further extensions such as
+      authentication, admin roles, and user-specific features.
+    </p>
+  </div>
+</main>
 
 </body>
 </html>

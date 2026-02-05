@@ -1,17 +1,26 @@
 const grid = document.getElementById('moviesGrid');
+const countEl = document.getElementById('movieCount');
 
 // LOAD MOVIES
 async function loadMovies(query = '') {
   const res = await fetch('/api/movies' + query);
   const movies = await res.json();
+
   grid.innerHTML = '';
+  countEl.textContent = movies.length;
 
   movies.forEach(movie => {
     grid.innerHTML += `
       <div class="movie-card">
-        <h3>${movie.title}</h3>
-        <span class="year">${movie.year ?? ''}</span>
+        <div class="card-top">
+          <h3>${movie.title}</h3>
+          <span class="year">${movie.year ?? ''}</span>
+        </div>
+
+        <div class="rating">⭐ ⭐ ⭐ ⭐ ☆</div>
+
         <p>${movie.description}</p>
+
         <div class="actions">
           <button onclick="editMovie('${movie._id}')">Edit</button>
           <button onclick="deleteMovie('${movie._id}')">Delete</button>
@@ -21,7 +30,7 @@ async function loadMovies(query = '') {
   });
 }
 
-// ADD MOVIE
+// ADD
 document.getElementById('addForm').addEventListener('submit', async e => {
   e.preventDefault();
 
