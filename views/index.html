@@ -9,10 +9,11 @@
 
 <nav class="navbar">
   <div class="logo">MovieLibrary</div>
-  <div class="nav-links">
+  <div class="nav-links" id="authLinks">
     <a href="/">Home</a>
     <a href="/about">About</a>
     <a href="/contact">Contact</a>
+    <a href="/login" class="login-link">Login</a>
   </div>
 </nav>
 
@@ -22,11 +23,11 @@
     <!-- HERO -->
     <section class="hero">
       <h1>Discover Movies</h1>
-      <p>Manage your personal movie collection in one place</p>
+      <p>Explore, manage and curate your personal movie collection</p>
     </section>
 
     <!-- ADD MOVIE -->
-    <section class="glass-box">
+    <section id="addSection" class="glass-box">
       <h2>Add Movie</h2>
       <form id="addForm" class="form">
         <input id="title" placeholder="Movie title" required>
@@ -54,9 +55,9 @@
 <!-- EDIT MODAL -->
 <div id="editModal" class="modal hidden">
   <h3>Edit Movie</h3>
-  <input id="editTitle">
-  <input id="editYear" type="number">
-  <textarea id="editDescription"></textarea>
+  <input id="editTitle" placeholder="Title">
+  <input id="editYear" type="number" placeholder="Year">
+  <textarea id="editDescription" placeholder="Description"></textarea>
   <div class="modal-actions">
     <button id="saveEdit" class="primary-btn">Save</button>
     <button onclick="closeModal()">Cancel</button>

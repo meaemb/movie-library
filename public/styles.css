@@ -272,3 +272,48 @@ body {
   color: #ccc;
   margin-bottom: 8px;
 }
+
+
+.glass {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.login-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.login-form input {
+  padding: 12px;
+  background: #111;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 6px;
+}
+
+.login-form button {
+  background: #e50914;
+  border: none;
+  padding: 12px;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.error-text {
+  color: #ff6b6b;
+  margin-top: 10px;
+}
+
+.muted {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.login-link {
+  color: #e50914;
+  text-decoration: none;
+}
