@@ -302,17 +302,6 @@ app.delete(
 );
 
 /* =====================
-   GLOBAL 404
-===================== */
-app.use((req, res) => {
-  if (req.url.startsWith('/api')) {
-    res.status(404).json({ error: 'API route not found' });
-  } else {
-    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
-  }
-});
-
-/* =====================
    START SERVER
 ===================== */
 connectDB()
@@ -326,3 +315,16 @@ connectDB()
     console.error('Failed to connect DB', err);
     process.exit(1);
   });
+
+
+/* =====================
+   GLOBAL 404
+===================== */
+app.use((req, res) => {
+  if (req.url.startsWith('/api')) {
+    res.status(404).json({ error: 'API route not found' });
+  } else {
+    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
+  }
+});
+
