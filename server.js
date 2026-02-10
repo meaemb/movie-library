@@ -7,39 +7,28 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
-
 const session = require('express-session');
 require('dotenv').config();
 
-const { requireAuth, requireOwnerOrAdmin } = require('./middleware/auth'); // from folder
-const { createAuthRoutes } = require('./routes/authRoutes'); // from folder
+const { requireAuth, requireOwnerOrAdmin } = require('./middleware/auth');
+const { createAuthRoutes } = require('./routes/authRoutes');
 
 const app = express();
 
 /* =====================
-   ENV CONFIG
+   CONFIG
 ===================== */
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const DB_NAME = 'movie_library';
-const SESSION_SECRET = process.env.SESSION_SECRET || 'dev_secret_change_me';
+const SESSION_SECRET = process.env.SESSION_SECRET;
 
 /* =====================
-   BASIC MIDDLEWARE
+   MIDDLEWARE
 ===================== */
 app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
-
-/* =====================
-   SESSION CONFIG
-===================== */
-app.set('trust proxy', 1);
+app.use(express.urlencoded({ extended: true }));
 
 app.use(
   session({
@@ -49,9 +38,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24,
+      secure: process.env.NODE_ENV === 'production',
     },
   })
 );
@@ -59,12 +47,11 @@ app.use(
 /* =====================
    DATABASE
 ===================== */
-let client;
 let moviesCollection;
 let usersCollection;
 
 async function connectDB() {
-  client = new MongoClient(MONGO_URI);
+  const client = new MongoClient(MONGO_URI);
   await client.connect();
   const db = client.db(DB_NAME);
 
@@ -75,21 +62,21 @@ async function connectDB() {
 }
 
 /* =====================
-   PAGE ROUTES
+   PAGES
 ===================== */
-app.get('/', (req, res) =>
+app.get('/', (_, res) =>
   res.sendFile(path.join(__dirname, 'views', 'index.html'))
 );
 
-app.get('/about', (req, res) =>
+app.get('/about', (_, res) =>
   res.sendFile(path.join(__dirname, 'views', 'about.html'))
 );
 
-app.get('/contact', (req, res) =>
+app.get('/contact', (_, res) =>
   res.sendFile(path.join(__dirname, 'views', 'contact.html'))
 );
 
-app.get('/login', (req, res) =>
+app.get('/login', (_, res) =>
   res.sendFile(path.join(__dirname, 'views', 'login.html'))
 );
 
@@ -98,7 +85,6 @@ app.get('/login', (req, res) =>
 ===================== */
 app.post('/contact', (req, res) => {
   const { name, email, message } = req.body;
-
   if (!name || !email || !message) {
     return res.status(400).send('All fields are required');
   }
@@ -110,193 +96,88 @@ app.post('/contact', (req, res) => {
     createdAt: new Date().toISOString(),
   };
 
-  fs.writeFile('contact-data.json', JSON.stringify(data, null, 2), err => {
-    if (err) return res.status(500).send('Failed to save data');
-
-    res.send(`
-      <h2>Thanks, ${name}!</h2>
-      <p>Your message has been saved successfully.</p>
-      <a href="/contact">Go back</a>
-    `);
-  });
+  fs.writeFile(
+    'contact-data.json',
+    JSON.stringify(data, null, 2),
+    () => res.redirect('/contact')
+  );
 });
+
+/* =====================
+   AUTH ROUTES  (ВАЖНО!)
+===================== */
+// ❗ auth routes должны быть ДО movies и ДО 404
+app.use('/api/auth', (req, res, next) => next());
 
 /* =====================
    MOVIES API
 ===================== */
 
-// GET all movies (public) + pagination + filters
+// GET movies (public + pagination)
 app.get('/api/movies', async (req, res) => {
-  try {
-    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit || '12', 10), 1), 50);
+  const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+  const limit = 12;
 
-    const { year, search } = req.query;
-    const filter = {};
+  const total = await moviesCollection.countDocuments();
+  const items = await moviesCollection
+    .find()
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .sort({ createdAt: -1 })
+    .toArray();
 
-    if (year) {
-      const y = Number(year);
-      if (Number.isNaN(y)) return res.status(400).json({ error: 'Invalid year' });
-      filter.year = y;
-    }
-
-    if (search) {
-      filter.title = { $regex: String(search), $options: 'i' };
-    }
-
-    const total = await moviesCollection.countDocuments(filter);
-    const totalPages = Math.max(Math.ceil(total / limit), 1);
-
-    const items = await moviesCollection
-      .find(filter)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    res.json({ page, limit, total, totalPages, items });
-  } catch (e) {
-    res.status(500).json({ error: 'Database error' });
-  }
-});
-
-// GET movie by id (public)
-app.get('/api/movies/:id', async (req, res) => {
-  if (!ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({ error: 'Invalid id' });
-  }
-
-  const movie = await moviesCollection.findOne({
-    _id: new ObjectId(req.params.id),
+  res.json({
+    page,
+    totalPages: Math.max(Math.ceil(total / limit), 1),
+    items,
   });
-
-  if (!movie) return res.status(404).json({ error: 'Movie not found' });
-
-  res.json(movie);
 });
 
-// CREATE movie (protected) + domain fields + validation
+// CREATE movie (auth)
 app.post('/api/movies', requireAuth, async (req, res) => {
-  const { title, description, year, genre, director, durationMinutes, rating } = req.body;
-
-  if (!title || !description) {
-    return res.status(400).json({ error: 'Missing title/description' });
-  }
-
-  const y = year ? Number(year) : null;
-  if (year && Number.isNaN(y)) return res.status(400).json({ error: 'Invalid year' });
-
-  const dur = durationMinutes ? Number(durationMinutes) : null;
-  if (durationMinutes && (Number.isNaN(dur) || dur <= 0)) {
-    return res.status(400).json({ error: 'Invalid durationMinutes' });
-  }
-
-  const r = rating ? Number(rating) : null;
-  if (rating && (Number.isNaN(r) || r < 0 || r > 10)) {
-    return res.status(400).json({ error: 'Invalid rating (0-10)' });
-  }
-
-  const result = await moviesCollection.insertOne({
-    title: String(title).trim(),
-    description: String(description).trim(),
-    year: y,
-    genre: genre ? String(genre).trim() : null,
-    director: director ? String(director).trim() : null,
-    durationMinutes: dur,
-    rating: r,
+  const movie = {
+    ...req.body,
     ownerId: req.session.user.id,
     createdAt: new Date(),
-  });
+  };
 
-  res.status(201).json({ id: result.insertedId });
+  await moviesCollection.insertOne(movie);
+  res.status(201).json({ message: 'Movie created' });
 });
 
-// UPDATE movie (protected + owner/admin) + domain fields + validation
+// UPDATE movie (owner/admin)
 app.put(
   '/api/movies/:id',
   requireAuth,
-  requireOwnerOrAdmin(async (req) => {
-    if (!ObjectId.isValid(req.params.id)) return null;
-
-    const movie = await moviesCollection.findOne({
+  requireOwnerOrAdmin(async req => {
+    const m = await moviesCollection.findOne({
       _id: new ObjectId(req.params.id),
     });
-
-    return movie?.ownerId;
+    return m?.ownerId;
   }),
   async (req, res) => {
-    if (!ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid id' });
-    }
-
-    const { title, description, year, genre, director, durationMinutes, rating } = req.body;
-
-    if (!title || !description) {
-      return res.status(400).json({ error: 'Missing title/description' });
-    }
-
-    const y = year ? Number(year) : null;
-    if (year && Number.isNaN(y)) return res.status(400).json({ error: 'Invalid year' });
-
-    const dur = durationMinutes ? Number(durationMinutes) : null;
-    if (durationMinutes && (Number.isNaN(dur) || dur <= 0)) {
-      return res.status(400).json({ error: 'Invalid durationMinutes' });
-    }
-
-    const r = rating ? Number(rating) : null;
-    if (rating && (Number.isNaN(r) || r < 0 || r > 10)) {
-      return res.status(400).json({ error: 'Invalid rating (0-10)' });
-    }
-
-    const result = await moviesCollection.updateOne(
+    await moviesCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
-      {
-        $set: {
-          title: String(title).trim(),
-          description: String(description).trim(),
-          year: y,
-          genre: genre ? String(genre).trim() : null,
-          director: director ? String(director).trim() : null,
-          durationMinutes: dur,
-          rating: r,
-        },
-      }
+      { $set: req.body }
     );
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Movie not found' });
-    }
-
     res.json({ message: 'Movie updated' });
   }
 );
 
-// DELETE movie (protected + owner/admin)
+// DELETE movie (owner/admin)
 app.delete(
   '/api/movies/:id',
   requireAuth,
-  requireOwnerOrAdmin(async (req) => {
-    if (!ObjectId.isValid(req.params.id)) return null;
-
-    const movie = await moviesCollection.findOne({
+  requireOwnerOrAdmin(async req => {
+    const m = await moviesCollection.findOne({
       _id: new ObjectId(req.params.id),
     });
-
-    return movie?.ownerId;
+    return m?.ownerId;
   }),
   async (req, res) => {
-    if (!ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid id' });
-    }
-
-    const result = await moviesCollection.deleteOne({
+    await moviesCollection.deleteOne({
       _id: new ObjectId(req.params.id),
     });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ error: 'Movie not found' });
-    }
-
     res.json({ message: 'Movie deleted' });
   }
 );
@@ -306,16 +187,16 @@ app.delete(
 ===================== */
 connectDB()
   .then(() => {
-    // connect auth routes after DB is ready
     app.use('/api/auth', createAuthRoutes(usersCollection));
 
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(PORT, () =>
+      console.log(`Server running on http://localhost:${PORT}`)
+    );
   })
   .catch(err => {
-    console.error('Failed to connect DB', err);
+    console.error(err);
     process.exit(1);
   });
-
 
 /* =====================
    GLOBAL 404
@@ -327,4 +208,3 @@ app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
   }
 });
-
