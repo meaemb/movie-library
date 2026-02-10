@@ -1,6 +1,8 @@
 let currentEditId = null;
 let deleteId = null;
 let currentUser = null;
+let currentPage = 1;
+let totalPages = 1;
 
 /* =====================
    AUTH CHECK
@@ -17,6 +19,7 @@ async function checkAuth() {
 ===================== */
 function updateUIAuth() {
   const authLinks = document.getElementById('authLinks');
+  if (!authLinks) return;
 
   if (currentUser) {
     authLinks.innerHTML = `
@@ -28,53 +31,102 @@ function updateUIAuth() {
   }
 }
 
-
 async function logout() {
   await fetch('/api/auth/logout', { method: 'POST' });
   window.location.reload();
 }
 
 /* =====================
-   LOAD MOVIES
+   LOAD MOVIES + PAGINATION
 ===================== */
-async function loadMovies(query = '') {
-  const res = await fetch('/api/movies' + query);
-  const movies = await res.json();
+async function loadMovies() {
+  const res = await fetch(`/api/movies?page=${currentPage}`);
+  const data = await res.json();
+
+  const movies = data.items || [];
+  totalPages = data.totalPages || 1;
 
   const grid = document.getElementById('moviesGrid');
   grid.innerHTML = '';
 
   movies.forEach(m => {
+    const canEdit =
+      currentUser &&
+      (currentUser.role === 'admin' ||
+        String(m.ownerId) === String(currentUser.id));
+
     const actions = currentUser
-      ? `
-        <div class="actions">
-          <button onclick="openEdit('${m._id}', '${escapeHtml(m.title)}', '${m.year ?? ''}', '${escapeHtml(m.description)}')">Edit</button>
-          <button onclick="openDelete('${m._id}')">Delete</button>
-        </div>
-      `
+      ? (canEdit
+          ? `
+            <div class="actions">
+              <button onclick="openEdit(
+                '${m._id}',
+                '${escapeHtml(m.title)}',
+                '${m.year ?? ''}',
+                '${escapeHtml(m.genre ?? '')}',
+                '${escapeHtml(m.director ?? '')}',
+                '${m.durationMinutes ?? ''}',
+                '${m.rating ?? ''}',
+                '${escapeHtml(m.description)}'
+              )">Edit</button>
+              <button onclick="openDelete('${m._id}')">Delete</button>
+            </div>
+          `
+          : `<span class="muted">Not allowed</span>`
+        )
       : `<span class="muted">Login required</span>`;
 
     grid.innerHTML += `
-    <div class="movie-card">
-    <h3>${m.title}</h3>
+      <div class="movie-card">
+        <h3>${m.title}</h3>
 
-    <div class="meta">
-      <span>${m.year ?? ''}</span> • 
-      <span>${m.genre ?? '—'}</span>
-    </div>
+        <div class="meta">
+          <span>${m.year ?? '—'}</span> •
+          <span>${m.genre ?? '—'}</span>
+        </div>
 
-    <p class="desc">${m.description}</p>
+        <p class="desc">${m.description}</p>
 
-    <div class="details">
-      <div><strong>Director:</strong> ${m.director ?? '—'}</div>
-      <div><strong>Duration:</strong> ${m.durationMinutes ?? '—'} min</div>
-      <div><strong>Rating:</strong> ⭐ ${m.rating ?? '—'}</div>
-    </div>
+        <div class="details">
+          <div><strong>Director:</strong> ${m.director ?? '—'}</div>
+          <div><strong>Duration:</strong> ${m.durationMinutes ?? '—'} min</div>
+          <div><strong>Rating:</strong> ⭐ ${m.rating ?? '—'}</div>
+        </div>
 
-    ${actions}
-  </div>
+        ${actions}
+      </div>
     `;
   });
+
+  renderPagination();
+}
+
+/* =====================
+   PAGINATION UI
+===================== */
+function renderPagination() {
+  const el = document.getElementById('pagination');
+  if (!el) return;
+
+  el.innerHTML = `
+    <button ${currentPage === 1 ? 'disabled' : ''} onclick="prevPage()">Prev</button>
+    <span>Page ${currentPage} / ${totalPages}</span>
+    <button ${currentPage === totalPages ? 'disabled' : ''} onclick="nextPage()">Next</button>
+  `;
+}
+
+function prevPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    loadMovies();
+  }
+}
+
+function nextPage() {
+  if (currentPage < totalPages) {
+    currentPage++;
+    loadMovies();
+  }
 }
 
 /* =====================
@@ -89,30 +141,32 @@ document.getElementById('addForm').addEventListener('submit', async e => {
     body: JSON.stringify({
       title: title.value,
       year: year.value,
+      genre: genre.value,
+      director: director.value,
+      durationMinutes: durationMinutes.value,
+      rating: rating.value,
       description: description.value
     })
   });
 
   e.target.reset();
+  currentPage = 1;
   loadMovies();
 });
 
-/* =====================
-   FILTER
-===================== */
-document.getElementById('filterBtn').onclick = () => {
-  const year = filterYear.value;
-  loadMovies(year ? `?year=${year}` : '');
-};
 
 /* =====================
    EDIT
 ===================== */
-function openEdit(id, t, y, d) {
+function openEdit(id, t, y, g, d, dur, r, desc) {
   currentEditId = id;
   editTitle.value = t;
   editYear.value = y;
-  editDescription.value = d;
+  editGenre.value = g;
+  editDirector.value = d;
+  editDurationMinutes.value = dur;
+  editRating.value = r;
+  editDescription.value = desc;
   openModal('editModal');
 }
 
@@ -123,6 +177,10 @@ saveEdit.onclick = async () => {
     body: JSON.stringify({
       title: editTitle.value,
       year: editYear.value,
+      genre: editGenre.value,
+      director: editDirector.value,
+      durationMinutes: editDurationMinutes.value,
+      rating: editRating.value,
       description: editDescription.value
     })
   });
@@ -155,7 +213,9 @@ function openModal(id) {
 
 function closeModal() {
   overlay.classList.add('hidden');
-  document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+  document.querySelectorAll('.modal').forEach(m =>
+    m.classList.add('hidden')
+  );
 }
 
 /* =====================
@@ -163,11 +223,11 @@ function closeModal() {
 ===================== */
 function escapeHtml(text) {
   return String(text)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /* =====================

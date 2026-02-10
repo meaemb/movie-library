@@ -27,24 +27,24 @@ The application now supports:
 
 - All authentication and CRUD operations are performed via the Web UI.
 
-## Team Members (Assignment 3 — Part 2)
+## Team Members (Assignment 4)
 
 - **Kamila A. (SE-2427)** - Domain Data & UI Forms
   - Extended movie domain model (5–8 fields)
   - Updated Add/Edit movie forms
   - Seeded MongoDB with 20+ realistic movie documents
 
-- **Begina M. (SE-2427)** - Domain Data & UI Forms
+- **Begina M. (SE-2427)** - Users & Sessions
   - Users collection with admin user
   - Password hashing using bcrypt
   - Login endpoint
   - Server-side sessions with express-session
 
-- **Dilyara A. (SE-2427)** - Users & Sessions
-  - Users collection with admin user
-  - Password hashing using bcrypt
-  - Login endpoint
-  - Server-side sessions with express-session
+- **Dilyara A. (SE-2427)** - Middleware & UI Authentication
+  - requireAuth middleware
+  - Protected POST / PUT / DELETE routes
+  - Login / Logout UI
+  - Conditional rendering of Add/Edit/Delete actions
 
 
 ## Technologies Used (Assignment 3 — Part 1)

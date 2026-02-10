@@ -3,6 +3,9 @@ require('dotenv').config();
 
 const MONGO_URI = process.env.MONGO_URI;
 const DB_NAME = 'movie_library';
+const ADMIN_ID = "6984d7003d9fa07c56f3bd56";
+
+
 
 const movies = [
   {
@@ -195,9 +198,10 @@ async function main() {
   const col = db.collection('movies');
 
   const docs = movies.map(movie => ({
-    ...movie,
-    createdAt: new Date()
-  }));
+  ...movie,
+  ownerId: ADMIN_ID,
+  createdAt: new Date()
+}));
 
   const result = await col.insertMany(docs);
   console.log(`Inserted ${result.insertedCount} movies`);

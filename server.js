@@ -9,8 +9,10 @@ const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const session = require('express-session');
-const bcrypt = require('bcrypt');
 require('dotenv').config();
+
+const { requireAuth, requireOwnerOrAdmin } = require('./middleware/auth'); // from folder
+const { createAuthRoutes } = require('./routes/authRoutes'); // from folder
 
 const app = express();
 
@@ -36,7 +38,6 @@ app.use((req, res, next) => {
 
 /* =====================
    SESSION CONFIG
-   (БЕЗ connect-mongo)
 ===================== */
 app.set('trust proxy', 1);
 
@@ -50,7 +51,7 @@ app.use(
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
@@ -71,16 +72,6 @@ async function connectDB() {
   usersCollection = db.collection('users');
 
   console.log('MongoDB connected');
-}
-
-/* =====================
-   AUTH MIDDLEWARE
-===================== */
-function requireAuth(req, res, next) {
-  if (!req.session.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  next();
 }
 
 /* =====================
@@ -131,66 +122,40 @@ app.post('/contact', (req, res) => {
 });
 
 /* =====================
-   AUTH API
-===================== */
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const user = await usersCollection.findOne({
-      email: String(email).toLowerCase(),
-    });
-
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    req.session.user = {
-      id: user._id.toString(),
-      email: user.email,
-      role: user.role || 'user',
-    };
-
-    res.json({ message: 'Logged in' });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-app.post('/api/auth/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie('sid');
-    res.json({ message: 'Logged out' });
-  });
-});
-
-app.get('/api/auth/me', (req, res) => {
-  res.json({ user: req.session.user || null });
-});
-
-/* =====================
    MOVIES API
 ===================== */
 
-// GET all movies (public)
+// GET all movies (public) + pagination + filters
 app.get('/api/movies', async (req, res) => {
   try {
-    const { year } = req.query;
-    const filter = {};
-    if (year) filter.year = Number(year);
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '12', 10), 1), 50);
 
-    const movies = await moviesCollection.find(filter).toArray();
-    res.json(movies);
-  } catch {
+    const { year, search } = req.query;
+    const filter = {};
+
+    if (year) {
+      const y = Number(year);
+      if (Number.isNaN(y)) return res.status(400).json({ error: 'Invalid year' });
+      filter.year = y;
+    }
+
+    if (search) {
+      filter.title = { $regex: String(search), $options: 'i' };
+    }
+
+    const total = await moviesCollection.countDocuments(filter);
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+
+    const items = await moviesCollection
+      .find(filter)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json({ page, limit, total, totalPages, items });
+  } catch (e) {
     res.status(500).json({ error: 'Database error' });
   }
 });
@@ -210,60 +175,131 @@ app.get('/api/movies/:id', async (req, res) => {
   res.json(movie);
 });
 
-// CREATE movie (protected)
+// CREATE movie (protected) + domain fields + validation
 app.post('/api/movies', requireAuth, async (req, res) => {
-  const { title, description, year } = req.body;
+  const { title, description, year, genre, director, durationMinutes, rating } = req.body;
 
   if (!title || !description) {
-    return res.status(400).json({ error: 'Missing fields' });
+    return res.status(400).json({ error: 'Missing title/description' });
+  }
+
+  const y = year ? Number(year) : null;
+  if (year && Number.isNaN(y)) return res.status(400).json({ error: 'Invalid year' });
+
+  const dur = durationMinutes ? Number(durationMinutes) : null;
+  if (durationMinutes && (Number.isNaN(dur) || dur <= 0)) {
+    return res.status(400).json({ error: 'Invalid durationMinutes' });
+  }
+
+  const r = rating ? Number(rating) : null;
+  if (rating && (Number.isNaN(r) || r < 0 || r > 10)) {
+    return res.status(400).json({ error: 'Invalid rating (0-10)' });
   }
 
   const result = await moviesCollection.insertOne({
-    title,
-    description,
-    year: year ? Number(year) : null,
+    title: String(title).trim(),
+    description: String(description).trim(),
+    year: y,
+    genre: genre ? String(genre).trim() : null,
+    director: director ? String(director).trim() : null,
+    durationMinutes: dur,
+    rating: r,
+    ownerId: req.session.user.id,
     createdAt: new Date(),
   });
 
   res.status(201).json({ id: result.insertedId });
 });
 
-// UPDATE movie (protected)
-app.put('/api/movies/:id', requireAuth, async (req, res) => {
-  if (!ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({ error: 'Invalid id' });
+// UPDATE movie (protected + owner/admin) + domain fields + validation
+app.put(
+  '/api/movies/:id',
+  requireAuth,
+  requireOwnerOrAdmin(async (req) => {
+    if (!ObjectId.isValid(req.params.id)) return null;
+
+    const movie = await moviesCollection.findOne({
+      _id: new ObjectId(req.params.id),
+    });
+
+    return movie?.ownerId;
+  }),
+  async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+
+    const { title, description, year, genre, director, durationMinutes, rating } = req.body;
+
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Missing title/description' });
+    }
+
+    const y = year ? Number(year) : null;
+    if (year && Number.isNaN(y)) return res.status(400).json({ error: 'Invalid year' });
+
+    const dur = durationMinutes ? Number(durationMinutes) : null;
+    if (durationMinutes && (Number.isNaN(dur) || dur <= 0)) {
+      return res.status(400).json({ error: 'Invalid durationMinutes' });
+    }
+
+    const r = rating ? Number(rating) : null;
+    if (rating && (Number.isNaN(r) || r < 0 || r > 10)) {
+      return res.status(400).json({ error: 'Invalid rating (0-10)' });
+    }
+
+    const result = await moviesCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      {
+        $set: {
+          title: String(title).trim(),
+          description: String(description).trim(),
+          year: y,
+          genre: genre ? String(genre).trim() : null,
+          director: director ? String(director).trim() : null,
+          durationMinutes: dur,
+          rating: r,
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Movie not found' });
+    }
+
+    res.json({ message: 'Movie updated' });
   }
+);
 
-  const { title, description, year } = req.body;
+// DELETE movie (protected + owner/admin)
+app.delete(
+  '/api/movies/:id',
+  requireAuth,
+  requireOwnerOrAdmin(async (req) => {
+    if (!ObjectId.isValid(req.params.id)) return null;
 
-  const result = await moviesCollection.updateOne(
-    { _id: new ObjectId(req.params.id) },
-    { $set: { title, description, year: Number(year) } }
-  );
+    const movie = await moviesCollection.findOne({
+      _id: new ObjectId(req.params.id),
+    });
 
-  if (result.matchedCount === 0) {
-    return res.status(404).json({ error: 'Movie not found' });
+    return movie?.ownerId;
+  }),
+  async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+
+    const result = await moviesCollection.deleteOne({
+      _id: new ObjectId(req.params.id),
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Movie not found' });
+    }
+
+    res.json({ message: 'Movie deleted' });
   }
-
-  res.json({ message: 'Movie updated' });
-});
-
-// DELETE movie (protected)
-app.delete('/api/movies/:id', requireAuth, async (req, res) => {
-  if (!ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({ error: 'Invalid id' });
-  }
-
-  const result = await moviesCollection.deleteOne({
-    _id: new ObjectId(req.params.id),
-  });
-
-  if (result.deletedCount === 0) {
-    return res.status(404).json({ error: 'Movie not found' });
-  }
-
-  res.json({ message: 'Movie deleted' });
-});
+);
 
 /* =====================
    GLOBAL 404
@@ -281,9 +317,10 @@ app.use((req, res) => {
 ===================== */
 connectDB()
   .then(() => {
-    app.listen(PORT, () =>
-      console.log(`Server running on port ${PORT}`)
-    );
+    // connect auth routes after DB is ready
+    app.use('/api/auth', createAuthRoutes(usersCollection));
+
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch(err => {
     console.error('Failed to connect DB', err);
