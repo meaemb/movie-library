@@ -8,10 +8,14 @@ let totalPages = 1;
    AUTH CHECK
 ===================== */
 async function checkAuth() {
-  const res = await fetch('/api/auth/me');
-  const data = await res.json();
-  currentUser = data.user;
-  updateUIAuth();
+  try {
+    const res = await fetch('/api/auth/me');
+    const data = await res.json();
+    currentUser = data.user;
+    updateUIAuth();
+  } catch {
+    currentUser = null;
+  }
 }
 
 /* =====================
@@ -33,20 +37,22 @@ function updateUIAuth() {
 
 async function logout() {
   await fetch('/api/auth/logout', { method: 'POST' });
-  window.location.reload();
+  window.location.href = '/';
 }
 
 /* =====================
    LOAD MOVIES + PAGINATION
 ===================== */
 async function loadMovies() {
+  const grid = document.getElementById('moviesGrid');
+  if (!grid) return;
+
   const res = await fetch(`/api/movies?page=${currentPage}`);
   const data = await res.json();
 
   const movies = data.items || [];
   totalPages = data.totalPages || 1;
 
-  const grid = document.getElementById('moviesGrid');
   grid.innerHTML = '';
 
   movies.forEach(m => {
@@ -70,8 +76,7 @@ async function loadMovies() {
                 '${escapeHtml(m.description)}'
               )">Edit</button>
               <button onclick="openDelete('${m._id}')">Delete</button>
-            </div>
-          `
+            </div>`
           : `<span class="muted">Not allowed</span>`
         )
       : `<span class="muted">Login required</span>`;
@@ -79,20 +84,16 @@ async function loadMovies() {
     grid.innerHTML += `
       <div class="movie-card">
         <h3>${m.title}</h3>
-
         <div class="meta">
           <span>${m.year ?? '—'}</span> •
           <span>${m.genre ?? '—'}</span>
         </div>
-
         <p class="desc">${m.description}</p>
-
         <div class="details">
           <div><strong>Director:</strong> ${m.director ?? '—'}</div>
           <div><strong>Duration:</strong> ${m.durationMinutes ?? '—'} min</div>
           <div><strong>Rating:</strong> ⭐ ${m.rating ?? '—'}</div>
         </div>
-
         ${actions}
       </div>
     `;
@@ -130,33 +131,35 @@ function nextPage() {
 }
 
 /* =====================
-   ADD MOVIE
+   ADD MOVIE (SAFE)
 ===================== */
-document.getElementById('addForm').addEventListener('submit', async e => {
-  e.preventDefault();
+const addForm = document.getElementById('addForm');
+if (addForm) {
+  addForm.addEventListener('submit', async e => {
+    e.preventDefault();
 
-  await fetch('/api/movies', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title: title.value,
-      year: year.value,
-      genre: genre.value,
-      director: director.value,
-      durationMinutes: durationMinutes.value,
-      rating: rating.value,
-      description: description.value
-    })
+    await fetch('/api/movies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: title.value,
+        year: year.value,
+        genre: genre.value,
+        director: director.value,
+        durationMinutes: durationMinutes.value,
+        rating: rating.value,
+        description: description.value
+      })
+    });
+
+    e.target.reset();
+    currentPage = 1;
+    loadMovies();
   });
-
-  e.target.reset();
-  currentPage = 1;
-  loadMovies();
-});
-
+}
 
 /* =====================
-   EDIT
+   EDIT / DELETE (SAFE)
 ===================== */
 function openEdit(id, t, y, g, d, dur, r, desc) {
   currentEditId = id;
@@ -170,41 +173,43 @@ function openEdit(id, t, y, g, d, dur, r, desc) {
   openModal('editModal');
 }
 
-saveEdit.onclick = async () => {
-  await fetch('/api/movies/' + currentEditId, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title: editTitle.value,
-      year: editYear.value,
-      genre: editGenre.value,
-      director: editDirector.value,
-      durationMinutes: editDurationMinutes.value,
-      rating: editRating.value,
-      description: editDescription.value
-    })
-  });
+const saveEditBtn = document.getElementById('saveEdit');
+if (saveEditBtn) {
+  saveEditBtn.onclick = async () => {
+    await fetch('/api/movies/' + currentEditId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: editTitle.value,
+        year: editYear.value,
+        genre: editGenre.value,
+        director: editDirector.value,
+        durationMinutes: editDurationMinutes.value,
+        rating: editRating.value,
+        description: editDescription.value
+      })
+    });
+    closeModal();
+    loadMovies();
+  };
+}
 
-  closeModal();
-  loadMovies();
-};
-
-/* =====================
-   DELETE
-===================== */
 function openDelete(id) {
   deleteId = id;
   openModal('deleteModal');
 }
 
-confirmDelete.onclick = async () => {
-  await fetch('/api/movies/' + deleteId, { method: 'DELETE' });
-  closeModal();
-  loadMovies();
-};
+const confirmDeleteBtn = document.getElementById('confirmDelete');
+if (confirmDeleteBtn) {
+  confirmDeleteBtn.onclick = async () => {
+    await fetch('/api/movies/' + deleteId, { method: 'DELETE' });
+    closeModal();
+    loadMovies();
+  };
+}
 
 /* =====================
-   MODALS
+   MODALS + UTILS
 ===================== */
 function openModal(id) {
   overlay.classList.remove('hidden');
@@ -213,14 +218,9 @@ function openModal(id) {
 
 function closeModal() {
   overlay.classList.add('hidden');
-  document.querySelectorAll('.modal').forEach(m =>
-    m.classList.add('hidden')
-  );
+  document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
 }
 
-/* =====================
-   UTILS
-===================== */
 function escapeHtml(text) {
   return String(text)
     .replace(/&/g, '&amp;')

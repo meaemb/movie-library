@@ -1,5 +1,5 @@
 /*
-  ASSIGNMENT 4
+  ASSIGNMENT 4 / FINAL PROJECT
   Sessions, Authentication & Authorization
 */
 
@@ -16,7 +16,7 @@ const { createAuthRoutes } = require('./routes/authRoutes');
 const app = express();
 
 /* =====================
-   CONFIG
+   ENV CONFIG
 ===================== */
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -24,11 +24,16 @@ const DB_NAME = 'movie_library';
 const SESSION_SECRET = process.env.SESSION_SECRET;
 
 /* =====================
-   MIDDLEWARE
+   BASIC MIDDLEWARE
 ===================== */
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+/* =====================
+   SESSION CONFIG
+===================== */
+app.set('trust proxy', 1);
 
 app.use(
   session({
@@ -40,6 +45,7 @@ app.use(
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
@@ -53,8 +59,8 @@ let usersCollection;
 async function connectDB() {
   const client = new MongoClient(MONGO_URI);
   await client.connect();
-  const db = client.db(DB_NAME);
 
+  const db = client.db(DB_NAME);
   moviesCollection = db.collection('movies');
   usersCollection = db.collection('users');
 
@@ -62,7 +68,7 @@ async function connectDB() {
 }
 
 /* =====================
-   PAGES
+   PAGE ROUTES
 ===================== */
 app.get('/', (_, res) =>
   res.sendFile(path.join(__dirname, 'views', 'index.html'))
@@ -85,6 +91,7 @@ app.get('/login', (_, res) =>
 ===================== */
 app.post('/contact', (req, res) => {
   const { name, email, message } = req.body;
+
   if (!name || !email || !message) {
     return res.status(400).send('All fields are required');
   }
@@ -99,15 +106,17 @@ app.post('/contact', (req, res) => {
   fs.writeFile(
     'contact-data.json',
     JSON.stringify(data, null, 2),
-    () => res.redirect('/contact')
+    err => {
+      if (err) return res.status(500).send('Failed to save data');
+      res.redirect('/contact');
+    }
   );
 });
 
 /* =====================
-   AUTH ROUTES  (ВАЖНО!)
+   AUTH ROUTES
 ===================== */
-// ❗ auth routes должны быть ДО movies и ДО 404
-app.use('/api/auth', (req, res, next) => next());
+app.use('/api/auth', (req, res, next) => next()); // placeholder (safe)
 
 /* =====================
    MOVIES API
@@ -119,6 +128,8 @@ app.get('/api/movies', async (req, res) => {
   const limit = 12;
 
   const total = await moviesCollection.countDocuments();
+  const totalPages = Math.max(Math.ceil(total / limit), 1);
+
   const items = await moviesCollection
     .find()
     .skip((page - 1) * limit)
@@ -126,22 +137,17 @@ app.get('/api/movies', async (req, res) => {
     .sort({ createdAt: -1 })
     .toArray();
 
-  res.json({
-    page,
-    totalPages: Math.max(Math.ceil(total / limit), 1),
-    items,
-  });
+  res.json({ page, totalPages, items });
 });
 
 // CREATE movie (auth)
 app.post('/api/movies', requireAuth, async (req, res) => {
-  const movie = {
+  await moviesCollection.insertOne({
     ...req.body,
     ownerId: req.session.user.id,
     createdAt: new Date(),
-  };
+  });
 
-  await moviesCollection.insertOne(movie);
   res.status(201).json({ message: 'Movie created' });
 });
 
@@ -150,10 +156,10 @@ app.put(
   '/api/movies/:id',
   requireAuth,
   requireOwnerOrAdmin(async req => {
-    const m = await moviesCollection.findOne({
+    const movie = await moviesCollection.findOne({
       _id: new ObjectId(req.params.id),
     });
-    return m?.ownerId;
+    return movie?.ownerId;
   }),
   async (req, res) => {
     await moviesCollection.updateOne(
@@ -169,10 +175,10 @@ app.delete(
   '/api/movies/:id',
   requireAuth,
   requireOwnerOrAdmin(async req => {
-    const m = await moviesCollection.findOne({
+    const movie = await moviesCollection.findOne({
       _id: new ObjectId(req.params.id),
     });
-    return m?.ownerId;
+    return movie?.ownerId;
   }),
   async (req, res) => {
     await moviesCollection.deleteOne({
@@ -187,24 +193,25 @@ app.delete(
 ===================== */
 connectDB()
   .then(() => {
+    // ⬅️ ВАЖНО: auth routes подключаются ПОСЛЕ БД
     app.use('/api/auth', createAuthRoutes(usersCollection));
 
+    // GLOBAL 404
+    app.use((req, res) => {
+      if (req.url.startsWith('/api')) {
+        res.status(404).json({ error: 'API route not found' });
+      } else {
+        res.status(404).sendFile(
+          path.join(__dirname, 'views', '404.html')
+        );
+      }
+    });
+
     app.listen(PORT, () =>
-      console.log(`Server running on http://localhost:${PORT}`)
+      console.log(`Server running on port ${PORT}`)
     );
   })
   .catch(err => {
-    console.error(err);
+    console.error('Failed to start server', err);
     process.exit(1);
   });
-
-/* =====================
-   GLOBAL 404
-===================== */
-app.use((req, res) => {
-  if (req.url.startsWith('/api')) {
-    res.status(404).json({ error: 'API route not found' });
-  } else {
-    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
-  }
-});
