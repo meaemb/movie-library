@@ -70,7 +70,10 @@ body {
   display: flex;
   justify-content: center;
   padding: 60px 20px;
+  flex-direction: column; 
+  align-items: center;  
 }
+
 
 .center-container {
   width: 100%;
