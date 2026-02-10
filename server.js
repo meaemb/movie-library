@@ -193,7 +193,6 @@ app.delete(
 ===================== */
 connectDB()
   .then(() => {
-    // ⬅️ ВАЖНО: auth routes подключаются ПОСЛЕ БД
     app.use('/api/auth', createAuthRoutes(usersCollection));
 
     // GLOBAL 404

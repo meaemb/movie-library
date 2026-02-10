@@ -1,3 +1,4 @@
+// seedUser.js
 const { MongoClient } = require('mongodb');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
@@ -19,7 +20,7 @@ async function main() {
     createdAt: new Date()
   });
 
-  console.log('User created:', email, password);
+  console.log('User created:', email);
   await client.close();
 }
 
