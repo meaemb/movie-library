@@ -1,13 +1,11 @@
 /*
-  FINAL PROJECT
+  FINAL PROJECT - Production Version
 */
 
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
-const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const { requireAuth, requireOwnerOrAdmin } = require('./middleware/auth');
@@ -86,70 +84,167 @@ app.get('/login', (_, res) =>
   res.sendFile(path.join(__dirname, 'views', 'login.html'))
 );
 
-
 /* =====================
    MOVIES API
 ===================== */
 
+/* ---------- GET movies (pagination + filtering) ---------- */
 app.get('/api/movies', async (req, res) => {
-  const page = Math.max(parseInt(req.query.page || '1', 10), 1);
-  const limit = 12;
+  try {
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '12', 10), 1), 50);
 
-  const total = await moviesCollection.countDocuments();
-  const totalPages = Math.max(Math.ceil(total / limit), 1);
+    const { year, search } = req.query;
+    const filter = {};
 
-  const items = await moviesCollection
-    .find()
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .sort({ createdAt: -1 })
-    .toArray();
+    if (year) {
+      const y = Number(year);
+      if (Number.isNaN(y)) {
+        return res.status(400).json({ error: 'Invalid year' });
+      }
+      filter.year = y;
+    }
 
-  res.json({ page, totalPages, items });
+    if (search) {
+      filter.title = { $regex: String(search), $options: 'i' };
+    }
+
+    const total = await moviesCollection.countDocuments(filter);
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+
+    const items = await moviesCollection
+      .find(filter)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json({ page, limit, total, totalPages, items });
+
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
+/* ---------- CREATE movie ---------- */
 app.post('/api/movies', requireAuth, async (req, res) => {
-  await moviesCollection.insertOne({
-    ...req.body,
-    ownerId: req.session.user.id,
-    createdAt: new Date(),
-  });
+  try {
+    const { title, description, year, genre, director, durationMinutes, rating } = req.body;
 
-  res.status(201).json({ message: 'Movie created' });
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Title and description required' });
+    }
+
+    const y = year ? Number(year) : null;
+    if (year && Number.isNaN(y)) {
+      return res.status(400).json({ error: 'Invalid year' });
+    }
+
+    const dur = durationMinutes ? Number(durationMinutes) : null;
+    if (durationMinutes && (Number.isNaN(dur) || dur <= 0)) {
+      return res.status(400).json({ error: 'Invalid durationMinutes' });
+    }
+
+    const r = rating ? Number(rating) : null;
+    if (rating && (Number.isNaN(r) || r < 0 || r > 10)) {
+      return res.status(400).json({ error: 'Rating must be between 0 and 10' });
+    }
+
+    await moviesCollection.insertOne({
+      title: String(title).trim(),
+      description: String(description).trim(),
+      year: y,
+      genre: genre ? String(genre).trim() : null,
+      director: director ? String(director).trim() : null,
+      durationMinutes: dur,
+      rating: r,
+      ownerId: req.session.user.id,
+      createdAt: new Date(),
+    });
+
+    res.status(201).json({ message: 'Movie created' });
+
+  } catch {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
+/* ---------- UPDATE movie ---------- */
 app.put(
   '/api/movies/:id',
   requireAuth,
   requireOwnerOrAdmin(async req => {
+    if (!ObjectId.isValid(req.params.id)) return null;
     const movie = await moviesCollection.findOne({
       _id: new ObjectId(req.params.id),
     });
     return movie?.ownerId;
   }),
   async (req, res) => {
-    await moviesCollection.updateOne(
-      { _id: new ObjectId(req.params.id) },
-      { $set: req.body }
-    );
-    res.json({ message: 'Movie updated' });
+    try {
+      if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ error: 'Invalid id' });
+      }
+
+      const { title, description, year, genre, director, durationMinutes, rating } = req.body;
+
+      if (!title || !description) {
+        return res.status(400).json({ error: 'Title and description required' });
+      }
+
+      await moviesCollection.updateOne(
+        { _id: new ObjectId(req.params.id) },
+        {
+          $set: {
+            title,
+            description,
+            year: year ? Number(year) : null,
+            genre,
+            director,
+            durationMinutes: durationMinutes ? Number(durationMinutes) : null,
+            rating: rating ? Number(rating) : null,
+          },
+        }
+      );
+
+      res.json({ message: 'Movie updated' });
+
+    } catch {
+      res.status(500).json({ error: 'Server error' });
+    }
   }
 );
 
+/* ---------- DELETE movie ---------- */
 app.delete(
   '/api/movies/:id',
   requireAuth,
   requireOwnerOrAdmin(async req => {
+    if (!ObjectId.isValid(req.params.id)) return null;
     const movie = await moviesCollection.findOne({
       _id: new ObjectId(req.params.id),
     });
     return movie?.ownerId;
   }),
   async (req, res) => {
-    await moviesCollection.deleteOne({
-      _id: new ObjectId(req.params.id),
-    });
-    res.json({ message: 'Movie deleted' });
+    try {
+      if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ error: 'Invalid id' });
+      }
+
+      const result = await moviesCollection.deleteOne({
+        _id: new ObjectId(req.params.id),
+      });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: 'Movie not found' });
+      }
+
+      res.json({ message: 'Movie deleted' });
+
+    } catch {
+      res.status(500).json({ error: 'Server error' });
+    }
   }
 );
 

@@ -19,11 +19,7 @@ function requireRole(role) {
   };
 }
 
-/**
- * Для owner-check:
- * - Admin может всё
- * - User может только если ownerId == session user id
- */
+
 function requireOwnerOrAdmin(getOwnerId) {
   return async (req, res, next) => {
     if (!req.session?.user) {
@@ -36,7 +32,7 @@ function requireOwnerOrAdmin(getOwnerId) {
     }
 
     try {
-      const ownerId = await getOwnerId(req); // достаём ownerId ресурса
+      const ownerId = await getOwnerId(req); 
       if (!ownerId) {
         return res.status(404).json({ error: "Resource not found" });
       }

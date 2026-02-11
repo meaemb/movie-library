@@ -47,7 +47,15 @@ async function loadMovies() {
   const grid = document.getElementById('moviesGrid');
   if (!grid) return;
 
-  const res = await fetch(`/api/movies?page=${currentPage}`);
+  const search = document.getElementById('searchInput')?.value || '';
+  const year = document.getElementById('filterYear')?.value || '';
+
+  let url = `/api/movies?page=${currentPage}`;
+
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (year) url += `&year=${year}`;
+
+  const res = await fetch(url);
   const data = await res.json();
 
   const movies = data.items || [];
@@ -60,6 +68,12 @@ async function loadMovies() {
       currentUser &&
       (currentUser.role === 'admin' ||
         String(m.ownerId) === String(currentUser.id));
+
+    const ownerLabel =
+      currentUser &&
+      String(m.ownerId) === String(currentUser.id)
+        ? '<small class="muted">Owner: you</small>'
+        : '<small class="muted">Owner: other</small>';
 
     const actions = currentUser
       ? (canEdit
@@ -84,6 +98,7 @@ async function loadMovies() {
     grid.innerHTML += `
       <div class="movie-card">
         <h3>${m.title}</h3>
+        ${ownerLabel}
         <div class="meta">
           <span>${m.year ?? '—'}</span> •
           <span>${m.genre ?? '—'}</span>
@@ -101,6 +116,12 @@ async function loadMovies() {
 
   renderPagination();
 }
+
+function applyFilters() {
+  currentPage = 1;
+  loadMovies();
+}
+
 
 /* =====================
    PAGINATION UI
