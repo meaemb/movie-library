@@ -1,6 +1,5 @@
 /*
-  ASSIGNMENT 4 / FINAL PROJECT
-  Sessions, Authentication & Authorization
+  FINAL PROJECT
 */
 
 const express = require('express');
@@ -8,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const { requireAuth, requireOwnerOrAdmin } = require('./middleware/auth');
@@ -87,42 +87,29 @@ app.get('/login', (_, res) =>
 );
 
 /* =====================
-   CONTACT FORM
+   TEMP USER CREATION (DELETE AFTER USE)
 ===================== */
-app.post('/contact', (req, res) => {
-  const { name, email, message } = req.body;
+app.get('/create-test-user', async (req, res) => {
+  try {
+    const hash = await bcrypt.hash('123456', 10);
 
-  if (!name || !email || !message) {
-    return res.status(400).send('All fields are required');
+    await usersCollection.insertOne({
+      email: 'beginaa@mail.ru',
+      passwordHash: hash,
+      role: 'user',
+      createdAt: new Date(),
+    });
+
+    res.send('User created: beginaa@mail.ru / 123456');
+  } catch (err) {
+    res.status(500).send('Error creating user');
   }
-
-  const data = {
-    name,
-    email,
-    message,
-    createdAt: new Date().toISOString(),
-  };
-
-  fs.writeFile(
-    'contact-data.json',
-    JSON.stringify(data, null, 2),
-    err => {
-      if (err) return res.status(500).send('Failed to save data');
-      res.redirect('/contact');
-    }
-  );
 });
-
-/* =====================
-   AUTH ROUTES
-===================== */
-app.use('/api/auth', (req, res, next) => next()); // placeholder (safe)
 
 /* =====================
    MOVIES API
 ===================== */
 
-// GET movies (public + pagination)
 app.get('/api/movies', async (req, res) => {
   const page = Math.max(parseInt(req.query.page || '1', 10), 1);
   const limit = 12;
@@ -140,7 +127,6 @@ app.get('/api/movies', async (req, res) => {
   res.json({ page, totalPages, items });
 });
 
-// CREATE movie (auth)
 app.post('/api/movies', requireAuth, async (req, res) => {
   await moviesCollection.insertOne({
     ...req.body,
@@ -151,7 +137,6 @@ app.post('/api/movies', requireAuth, async (req, res) => {
   res.status(201).json({ message: 'Movie created' });
 });
 
-// UPDATE movie (owner/admin)
 app.put(
   '/api/movies/:id',
   requireAuth,
@@ -170,7 +155,6 @@ app.put(
   }
 );
 
-// DELETE movie (owner/admin)
 app.delete(
   '/api/movies/:id',
   requireAuth,
@@ -195,7 +179,6 @@ connectDB()
   .then(() => {
     app.use('/api/auth', createAuthRoutes(usersCollection));
 
-    // GLOBAL 404
     app.use((req, res) => {
       if (req.url.startsWith('/api')) {
         res.status(404).json({ error: 'API route not found' });
