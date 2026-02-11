@@ -86,25 +86,6 @@ app.get('/login', (_, res) =>
   res.sendFile(path.join(__dirname, 'views', 'login.html'))
 );
 
-/* =====================
-   TEMP USER CREATION (DELETE AFTER USE)
-===================== */
-app.get('/create-test-user', async (req, res) => {
-  try {
-    const hash = await bcrypt.hash('123456', 10);
-
-    await usersCollection.insertOne({
-      email: 'beginaa@mail.ru',
-      passwordHash: hash,
-      role: 'user',
-      createdAt: new Date(),
-    });
-
-    res.send('User created: beginaa@mail.ru / 123456');
-  } catch (err) {
-    res.status(500).send('Error creating user');
-  }
-});
 
 /* =====================
    MOVIES API

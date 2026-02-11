@@ -11,7 +11,7 @@ async function main() {
 
   const users = client.db(DB_NAME).collection('users');
 
-  const email = 'begina@mail.ru';
+  const email = 'beginaa@mail.ru';
   const password = '123456';
 
   const passwordHash = await bcrypt.hash(password, 10);
