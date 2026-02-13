@@ -1,198 +1,285 @@
-# Movie Library — Web Application
+# Movie Library — Final Project (Production Version)
 
-Movie Library is a Node.js & Express.js web application that serves as a prototype
-for a movie catalog website.
-The project is developed incrementally as part of university backend assignments.
+Movie Library is a full-stack web application built with **Node.js, Express, MongoDB Atlas, and Vanilla JavaScript**.
 
-- **Assignment 2** - Express basics and CRUD with SQLite
-- **Assignment 3 Part 1** - Backend API with MongoDB (CRUD, filtering, sorting, projection)
-- **Assignment 3 Part 2** — MongoDB Atlas, environment variables, deployment  
-- **Assignment 4** — Sessions-based authentication, users, middleware protection, UI integration
+The project demonstrates:
 
-# Assignment 4 — Sessions-Based Authentication & UI Protection
-
-## Project Description
-
-In Assignment 4, the project was extended with sessions-based authentication and user management.
-
-The application now supports:
-
-- User authentication with bcrypt
-
-- Server-side sessions using express-session
-
-- Protected API routes using middleware
-
-- Dynamic UI behavior based on authentication state
-
-- All authentication and CRUD operations are performed via the Web UI.
-
-## Team Members (Assignment 4)
-
-- **Kamila A. (SE-2427)** - Domain Data & UI Forms
-  - Extended movie domain model (5–8 fields)
-  - Updated Add/Edit movie forms
-  - Seeded MongoDB with 20+ realistic movie documents
-
-- **Begina M. (SE-2427)** - Users & Sessions
-  - Users collection with admin user
-  - Password hashing using bcrypt
-  - Login endpoint
-  - Server-side sessions with express-session
-
-- **Dilyara A. (SE-2427)** - Middleware & UI Authentication
-  - requireAuth middleware
-  - Protected POST / PUT / DELETE routes
-  - Login / Logout UI
-  - Conditional rendering of Add/Edit/Delete actions
+- Secure authentication with bcrypt
+- Sessions-based authorization
+- Owner-based access control
+- Role-Based Access Control (RBAC)
+- Pagination & filtering
+- Fully UI-based CRUD demo
 
 
-## Technologies Used (Assignment 3 — Part 1)
+# Final Project Overview
 
-- **Node.js**
-- **Express.js**
-- **MongoDB Atlas**
-- **MongoDB Native Driver**
-- **dotenv**
-- **express-session**
-- **bcrypt**
-- **HTML5**
-- **CSS3**
-- **Vanilla JavaScript**
+The application allows users to:
 
-## Authentication (Assignment 4)
-### Sessions-Based Authentication
+- View movies (public access)
+- Login / Logout (sessions-based authentication)
+- Create movies (authenticated users only)
+- Edit/Delete movies (owner or admin only)
+- Filter and paginate movies
+- Demonstrate full security from UI (no Postman required)
 
-- Login via Web UI (/login)
-- After successful login:
-    - Server creates a session
-    - Session ID is stored in a browser cookie
-    - Session persists between requests
-- Authenticated user is accessible via req.session.user
 
-### Middleware Protection
+# Team Roles
 
-- requireAuth middleware protects:
-    - POST /api/movies
-    - PUT /api/movies/:id
-    - DELETE /api/movies/:id
+## Dilyara A. — Backend (Auth / Roles / Ownership)
 
-Unauthenticated users cannot modify data.
+### Responsibilities
 
-## UI Authentication Behavior
-- Login / Logout displayed dynamically
-- Authenticated users can:
-    - Add movies
-    - Edit movies
-    - Delete movies
-- Unauthenticated users:
-    - Can only view movies
-    - CRUD actions are hidden
+- Modular backend structure:
+  - `middleware/auth.js`
+  - `routes/authRoutes.js`
+  - `controllers/authController.js`
 
-Authentication state is checked via /api/auth/me.
+- Authentication:
+  - bcrypt password hashing
+  - express-session configuration
+  - `/api/auth/login`
+  - `/api/auth/logout`
+  - `/api/auth/me`
 
-## Database Design
+- Authorization:
+  - `requireAuth` middleware
+  - `requireOwnerOrAdmin` middleware
+  - Owner validation on PUT / DELETE
+  - Role stored in `req.session.user.role`
+  - Admin role support
 
-- Database: MongoDB
-- Database name: movie_library
-- Collection: movies
+### Result
 
-## Movie Document Structure
+- User can modify only their own movies
+- Admin can modify all movies
+- Owner access + RBAC fully implemented
+
+
+## Kamila A. — Database & API Logic
+
+### Responsibilities
+
+- Production-like API structure
+- 2 related collections (`users`, `movies`)
+- ownerId relation between collections
+- Pagination & filtering:
+GET /api/movies?page=&limit=&year=&search=
+
+Returns:
+
 {
-  "_id": ObjectId,
-  "title": "String",
-  "year": Number,
-  "genre": "String",
-  "director": "String",
-  "durationMinutes": Number,
-  "rating": Number,
-  "description": "String",
-  "createdAt": Date
+page,
+limit,
+total,
+totalPages,
+items
 }
-The database is populated using a seed script with 20+ realistic movie documents.
 
-## User Document Structure
+
+### Extended Movie Fields
+
+- title
+- description
+- year
+- genre
+- director
+- durationMinutes
+- rating
+- ownerId
+- createdAt
+
+### Validation & Status Codes
+
+- 400 — Bad Request
+- 401 — Unauthorized
+- 403 — Forbidden
+- 404 — Not Found
+- 500 — Server Error
+
+### Result
+
+- 2 related collections
+- Filtering & pagination
+- 5–8 domain fields
+- Production-ready API
+
+
+## Begina M. — Frontend/UI & Defense
+
+### Responsibilities
+
+- Full UI-based demo (no Postman)
+
+### UI Features
+
+- Add/Edit forms with:
+  - genre
+  - director
+  - durationMinutes
+  - rating
+
+- Role-based UI logic:
+  - Hide Edit/Delete if not owner/admin
+  - Display "Owner: you / other"
+  - Show user role in navbar
+
+- Pagination UI:
+  - Prev / Next buttons
+
+- Filtering UI:
+  - Search by title
+  - Filter by year
+
+### Defense Scenario
+
+1. Guest → cannot CRUD
+2. User → CRUD only own movies
+3. Admin → CRUD any movie
+
+Explains:
+- Sessions vs cookies
+- HttpOnly & Secure flags
+- Authentication vs Authorization
+- Owner access vs RBAC
+
+
+# Technologies Used
+
+- Node.js
+- Express.js
+- MongoDB Atlas
+- MongoDB Native Driver
+- express-session
+- bcrypt
+- dotenv
+- HTML5
+- CSS3
+- Vanilla JavaScript
+
+
+# Authentication & Security
+
+- Password hashing with bcrypt
+- Server-side sessions
+- Session ID stored in HttpOnly cookie
+- Protected routes via middleware
+- Owner validation
+- Role-Based Access Control
+
+
+# Database Design
+
+## Database
+movie_library
+
+
+## Movies Collection
+
 {
-  "_id": ObjectId,
-  "email": "String",
-  "passwordHash": "String",
-  "role": "admin",
-  "createdAt": Date
+_id: ObjectId,
+title: String,
+description: String,
+year: Number,
+genre: String,
+director: String,
+durationMinutes: Number,
+rating: Number,
+ownerId: String,
+createdAt: Date
 }
-Passwords are securely stored using bcrypt hashing.
 
 
-## REST API Routes (CRUD)
+## Users Collection
 
-### Authentication routes
-| Method | Route            | Description               |
-|------|--------------------|---------------------------|
-| POST | /api/auth/login    | User login                |
-| GET  | /api/auth/lgout    | User logout               |
-| GET  | /api/auth/me       | Get current user session  |
-
-
-
-| Method | Route              | Description                  |
-|------|--------------------|--------------------------------|
-| GET  | /api/movies        | Get all movies                 |
-| POST | /api/movies        | Create a new movie (auth)      |
-| PUT  | /api/movies/:id    | Update a movie by ID (auth)    |
-| DELETE | /api/movies/:id  | Delete a movie by ID           |
+{
+_id: ObjectId,
+email: String,
+passwordHash: String,
+role: "user" | "admin",
+createdAt: Date
+}
 
 
-## Environment Variables
 
-The application uses environment variables for configuration:
+# REST API Routes
+
+## Authentication
+
+| Method | Route | Description |
+|--------|--------|------------|
+| POST | /api/auth/login | Login |
+| POST | /api/auth/logout | Logout |
+| GET | /api/auth/me | Get current session |
+
+## Movies
+
+| Method | Route | Description |
+|--------|--------|------------|
+| GET | /api/movies | Get movies (pagination + filtering) |
+| POST | /api/movies | Create movie (auth required) |
+| PUT | /api/movies/:id | Update movie (owner/admin) |
+| DELETE | /api/movies/:id | Delete movie (owner/admin) |
+
+
+# Environment Variables
+
+Create `.env` file:
 
 PORT=3000
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/movie_library
 SESSION_SECRET=your_secret_key
 
-## Validation & Error Handling (Part 2)
 
-- **200 OK** — successful GET, PUT, DELETE  
-- **201 Created** — successful POST  
-- **400 Bad Request** — invalid ID or missing fields  
-- **404 Not Found** — movie not found  
-- **500 Internal Server Error** — database or server error  
+`.env` must be added to `.gitignore`.
 
 
+#  Project Structure
 
-## Project Structure
+
 movie-library/
+├── controllers/
+│ └── authController.js
+├── middleware/
+│ └── auth.js
+├── routes/
+│ └── authRoutes.js
 ├── public/
-│   ├── styles.css
-│   ├── movies.js
-│   └── login.js
+│ ├── styles.css
+│ ├── movies.js
+│ └── auth-ui.js
 ├── views/
-│   ├── index.html
-│   ├── login.html
-│   ├── about.html
-│   ├── contact.html
-│   └── 404.html
+│ ├── index.html
+│ ├── login.html
+│ ├── about.html
+│ ├── contact.html
+│ └── 404.html
+├── server.js
 ├── seedMovies.js
 ├── seedAdmin.js
-├── server.js
 ├── package.json
-├── package-lock.json
 └── README.md
 
 
+# Installation & Run
 
-## Installation & Run Instructions
-
-1. Clone the repository:
-git clone https://github.com/meaemb/movie-library.git
-
-2. Navigate to the project folder:
+git clone https://github.com/your-username/movie-library.git
 cd movie-library
-
-3. Install dependencies:
 npm install
-
-4. Run the server:
 node server.js
 
-5. Open in browser:
+
+Open in browser:
+
 http://localhost:3000
+
+
+# Final Result
+
+- Authentication + bcrypt
+- Owner-based access
+- Role-Based Access Control
+- Pagination & Filtering
+- Protected API endpoints
+- Full UI demonstration
+- Ready for defense
